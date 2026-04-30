@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/HUAWEI/Downloads/willsforfamily.com/**)",
+      "Read(//c/Users/HUAWEI/Downloads/**)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(python3 -c ' *)",
+      "Read(//c/Users/HUAWEI/Desktop/**)",
+      "Bash(cp '/c/Users/HUAWEI/Downloads/Webizz/images/WEBIZZ OFFICE PICTURES EDITED-named/WEBIZZ OFFICE PICTURES EDITED/VERY PREMIUM OFFICE.jpg' /c/Users/HUAWEI/Downloads/Webizz/images/office-1.jpg)",
+      "Bash(cp '/c/Users/HUAWEI/Downloads/Webizz/images/WEBIZZ OFFICE PICTURES EDITED-named/WEBIZZ OFFICE PICTURES EDITED/PLATINUM OFFICE- 450 SQFT.JPG' /c/Users/HUAWEI/Downloads/Webizz/images/office-2.jpg)",
+      "Bash(cp '/c/Users/HUAWEI/Downloads/Webizz/images/WEBIZZ OFFICE PICTURES EDITED-named/WEBIZZ OFFICE PICTURES EDITED/conference room.jpg' /c/Users/HUAWEI/Downloads/Webizz/images/office-3.jpg)",
+      "Bash(cp '/c/Users/HUAWEI/Downloads/Webizz/images/WEBIZZ OFFICE PICTURES EDITED-named/WEBIZZ OFFICE PICTURES EDITED/120 sqft.jpg' /c/Users/HUAWEI/Downloads/Webizz/images/office-4.jpg)",
+      "Bash(cp '/c/Users/HUAWEI/Downloads/Webizz/images/WEBIZZ OFFICE PICTURES EDITED-named/WEBIZZ OFFICE PICTURES EDITED/flexi desk.JPG' /c/Users/HUAWEI/Downloads/Webizz/images/office-5.jpg)",
+      "Bash(xargs -I{} basename {})"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\HUAWEI\\Downloads\\willsforfamily.com",
+      "C:\\Users\\HUAWEI\\Downloads\\Zaytoon Al Badr",
+      "C:\\Users\\HUAWEI\\.claude",
+      "C:\\Users\\HUAWEI\\Downloads\\Nexus",
+      "C:\\Users\\HUAWEI\\Downloads\\GEMS",
+      "C:\\Users\\HUAWEI\\Downloads\\herbsvitality.com\\herbsvitality.com",
+      "C:\\Users\\HUAWEI\\Downloads\\Head to Toe",
+      "C:\\Users\\HUAWEI\\Downloads\\glutathione-c",
+      "C:\\Users\\HUAWEI\\Downloads\\Duct Cleaning"
+    ]
+  }
+}
