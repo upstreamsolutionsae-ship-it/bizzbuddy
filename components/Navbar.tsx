@@ -337,7 +337,7 @@ export default function Navbar() {
       )}
 
       <style>{`
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
           .mobile-hamburger { display: block !important; }
           nav > div:nth-child(2) { display: none !important; }
         }
