@@ -1,7 +1,16 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+
+const LOAN_ROUTES: [string, string][] = [
+  ["Home Loan", "/loans/home-loan"],
+  ["Personal Loan", "/loans/personal-loan"],
+  ["Business Loan", "/loans/business-loan"],
+  ["Working Capital", "/loans/working-capital"],
+  ["Loan Against Property", "/loans/loan-against-property"],
+];
 
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
@@ -32,21 +41,21 @@ const LOAN_TYPES = [
     key: "business-loan",
     icon: "🏢",
     title: "Business Loan",
-    desc: "Fuel your MSME growth with working capital, term loans, and machinery finance from 50+ banks and NBFCs across India.",
-    features: ["Up to ₹10 Crore", "Tenure up to 10 years", "Secured & Unsecured"],
-    color: "#fff7ed",
-    border: "#fed7aa",
-    accent: "#c2410c",
+    desc: "Fuel your business growth with tailored MSME financing — working capital, machinery finance, and term loans from 50+ banks and NBFCs across India.",
+    features: ["Up to ₹50 Lakh", "Tenure up to 5 years", "Unsecured Funding"],
+    color: "#ecfeff",
+    border: "#a5f3fc",
+    accent: "#0e7490",
   },
   {
-    key: "car-loan",
-    icon: "🚗",
-    title: "Car Loan",
-    desc: "Drive home your favourite car with affordable EMIs, quick approval, and financing for both new and pre-owned vehicles.",
-    features: ["Up to 100% on-road", "Tenure up to 7 years", "Rate from 8.75% p.a."],
-    color: "#fdf4ff",
-    border: "#e9d5ff",
-    accent: "#7c3aed",
+    key: "working-capital",
+    icon: "💧",
+    title: "Working Capital",
+    desc: "Flexible business funding for cash flow, inventory, and receivables — CC, OD, ODAP, WCTL, LC, BG, bill discounting and more from leading banks and NBFCs.",
+    features: ["Up to ₹50 Crore limits", "Tenure up to 15 years", "Fund & Non-Fund Based"],
+    color: "#f0f9ff",
+    border: "#bae6fd",
+    accent: "#0369a1",
   },
   {
     key: "loan-against-property",
@@ -104,6 +113,7 @@ const FOOTER_CONTACT = {
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const [leadForm, setLeadForm] = useState({
     name: "", phone: "", business: "", loan: "", city: "", loanType: "",
   });
@@ -115,6 +125,10 @@ export default function HomePage() {
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (leadForm.phone.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
     await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -136,16 +150,17 @@ export default function HomePage() {
       {/* ── HERO ── */}
       <section
         style={{
-          background: `linear-gradient(135deg, ${NAVY} 0%, #1a3f7a 55%, #1565C0 100%)`,
+          background: "linear-gradient(135deg, #eef5ff 0%, #ffffff 60%, #f5f9ff 100%)",
           padding: "70px 5% 60px",
           position: "relative",
           overflow: "hidden",
+          borderBottom: "1px solid #e8eef7",
         }}
       >
         <div
           style={{
             position: "absolute", inset: 0,
-            background: "radial-gradient(ellipse at 80% 50%, rgba(255,255,255,0.06) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 80% 30%, rgba(21,101,192,0.08) 0%, transparent 60%)",
             pointerEvents: "none",
           }}
         />
@@ -154,26 +169,26 @@ export default function HomePage() {
             <div
               style={{
                 display: "inline-block",
-                background: "rgba(255,255,255,0.12)",
-                color: "#fff",
+                background: "#e8f0fe",
+                color: BLUE,
                 padding: "6px 16px",
                 borderRadius: 20,
                 fontSize: 11,
                 fontWeight: 700,
                 marginBottom: 22,
-                border: "1px solid rgba(255,255,255,0.2)",
+                border: "1px solid #bfdbfe",
                 letterSpacing: 1,
               }}
             >
               BUILT BY BANKERS • DESIGNED FOR GROWTH
             </div>
-            <h1 style={{ fontSize: 46, fontWeight: 900, color: "#fff", lineHeight: 1.18, marginBottom: 18 }}>
-              Your Financial <span style={{ color: "#93c5fd" }}>Buddy</span> for<br />MSME Growth
+            <h1 style={{ fontSize: 46, fontWeight: 900, color: NAVY, lineHeight: 1.18, marginBottom: 18 }}>
+              Your Financial <span style={{ color: BLUE }}>Buddy</span> for<br />MSME Growth
             </h1>
-            <p style={{ fontSize: 17, color: "rgba(255,255,255,0.8)", lineHeight: 1.7, marginBottom: 10 }}>
+            <p style={{ fontSize: 17, color: "#334155", lineHeight: 1.7, marginBottom: 10, fontWeight: 600 }}>
               Debt • Equity • Advisory • Analytics
             </p>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.8, marginBottom: 36 }}>
+            <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.8, marginBottom: 36 }}>
               15+ years of banking expertise at your service. Pan-India lender network.<br />Faster approvals. End-to-end support.
             </p>
             <div style={{ display: "flex", gap: 32, marginTop: 8 }}>
@@ -185,8 +200,8 @@ export default function HomePage() {
                 ] as [string, string][]
               ).map(([num, label]) => (
                 <div key={label}>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: "#93c5fd" }}>{num}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)" }}>{label}</div>
+                  <div style={{ fontSize: 26, fontWeight: 900, color: BLUE }}>{num}</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>{label}</div>
                 </div>
               ))}
             </div>
@@ -198,7 +213,8 @@ export default function HomePage() {
               background: "#fff",
               borderRadius: 20,
               padding: 32,
-              boxShadow: "0 24px 64px rgba(0,0,0,0.28)",
+              boxShadow: "0 18px 50px rgba(21,101,192,0.15)",
+              border: "1px solid #e2e8f0",
             }}
           >
             {submitted ? (
@@ -242,7 +258,17 @@ export default function HomePage() {
                       placeholder={placeholder}
                       required={req}
                       value={leadForm[name]}
-                      onChange={(e) => setLeadForm((p) => ({ ...p, [name]: e.target.value }))}
+                      inputMode={name === "phone" ? "numeric" : undefined}
+                      maxLength={name === "phone" ? 10 : undefined}
+                      onChange={(e) =>
+                        setLeadForm((p) => ({
+                          ...p,
+                          [name]:
+                            name === "phone"
+                              ? e.target.value.replace(/\D/g, "").slice(0, 10)
+                              : e.target.value,
+                        }))
+                      }
                       style={{
                         padding: "11px 14px",
                         border: "1.5px solid #e2e8f0",
@@ -286,7 +312,7 @@ export default function HomePage() {
                     }}
                   >
                     <option value="">Type of Loan</option>
-                    {["Home Loan", "Personal Loan", "Business Loan", "Car Loan", "Loan Against Property"].map((o) => (
+                    {["Home Loan", "Personal Loan", "Business Loan", "Working Capital", "Loan Against Property"].map((o) => (
                       <option key={o}>{o}</option>
                     ))}
                   </select>
@@ -313,6 +339,33 @@ export default function HomePage() {
                 </p>
               </>
             )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PARTNER BANKS TICKER (below hero, above offerings) ── */}
+      <section style={{ padding: "30px 0", background: "#fff", borderBottom: "1px solid #e2e8f0" }}>
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 2 }}>
+            Partner Banks / Institutions
+          </span>
+        </div>
+        <div style={{ overflow: "hidden", position: "relative" }}>
+          <div
+            onMouseEnter={() => setTickerPaused(true)}
+            onMouseLeave={() => setTickerPaused(false)}
+            style={{
+              display: "flex",
+              gap: 48,
+              animation: tickerPaused ? "none" : "ticker 25s linear infinite",
+              width: "max-content",
+            }}
+          >
+            {[...BANKS, ...BANKS].map((bank, i) => (
+              <span key={i} style={{ fontSize: 14, fontWeight: 700, color: NAVY, opacity: 0.65, whiteSpace: "nowrap" }}>
+                {bank}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -512,6 +565,7 @@ export default function HomePage() {
                 color: "#eff6ff",
                 border: "#bfdbfe",
                 accent: BLUE,
+                loanDropdown: true,
               },
               {
                 icon: "💡",
@@ -522,6 +576,7 @@ export default function HomePage() {
                 color: "#fef9ee",
                 border: "#fde68a",
                 accent: "#b45309",
+                loanDropdown: false,
               },
             ].map((c) => (
               <div
@@ -536,21 +591,52 @@ export default function HomePage() {
                 <div style={{ fontSize: 44, marginBottom: 16 }}>{c.icon}</div>
                 <h3 style={{ fontSize: 22, fontWeight: 800, color: NAVY, marginBottom: 12 }}>{c.title}</h3>
                 <p style={{ color: "#475569", lineHeight: 1.7, fontSize: 14, marginBottom: 24 }}>{c.desc}</p>
-                <Link
-                  href={c.href}
-                  style={{
-                    display: "inline-block",
-                    background: c.accent,
-                    color: "#fff",
-                    padding: "11px 24px",
-                    borderRadius: 8,
-                    fontWeight: 700,
-                    fontSize: 13,
-                    textDecoration: "none",
-                  }}
-                >
-                  {c.cta} →
-                </Link>
+                {c.loanDropdown ? (
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      if (e.target.value) router.push(e.target.value);
+                    }}
+                    style={{
+                      background: c.accent,
+                      color: "#fff",
+                      padding: "11px 24px",
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      border: "none",
+                      cursor: "pointer",
+                      fontFamily: "'Inter', sans-serif",
+                      appearance: "none",
+                      WebkitAppearance: "none",
+                    }}
+                  >
+                    <option value="" disabled>
+                      Apply for Loan ▾
+                    </option>
+                    {LOAN_ROUTES.map(([label, href]) => (
+                      <option key={href} value={href} style={{ background: "#fff", color: "#1a202c" }}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <Link
+                    href={c.href}
+                    style={{
+                      display: "inline-block",
+                      background: c.accent,
+                      color: "#fff",
+                      padding: "11px 24px",
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      fontSize: 13,
+                      textDecoration: "none",
+                    }}
+                  >
+                    {c.cta} →
+                  </Link>
+                )}
               </div>
             ))}
           </div>
@@ -803,50 +889,6 @@ export default function HomePage() {
           >
             Talk to an Advisor
           </Link>
-        </div>
-      </section>
-
-      {/* ── PARTNER BANKS TICKER ── */}
-      <section style={{ padding: "36px 0", background: "#f8fafc", borderTop: "1px solid #e2e8f0" }}>
-        <div style={{ textAlign: "center", marginBottom: 18 }}>
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#94a3b8",
-              textTransform: "uppercase",
-              letterSpacing: 2,
-            }}
-          >
-            Partner Banks / Institutions
-          </span>
-        </div>
-        <div style={{ overflow: "hidden", position: "relative" }}>
-          <div
-            onMouseEnter={() => setTickerPaused(true)}
-            onMouseLeave={() => setTickerPaused(false)}
-            style={{
-              display: "flex",
-              gap: 48,
-              animation: tickerPaused ? "none" : "ticker 25s linear infinite",
-              width: "max-content",
-            }}
-          >
-            {[...BANKS, ...BANKS].map((bank, i) => (
-              <span
-                key={i}
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: NAVY,
-                  opacity: 0.65,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {bank}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 

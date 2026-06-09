@@ -6,6 +6,10 @@ import Navbar from "@/components/Navbar";
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
 
+export type FAQ = { q: string; a: string };
+export type SEOSection = { heading: string; body?: string; bullets?: string[] };
+export type DocGroup = { heading: string; items: string[] };
+
 export type LoanConfig = {
   key: string;
   title: string;
@@ -18,7 +22,14 @@ export type LoanConfig = {
   features: { icon: string; title: string; desc: string }[];
   eligibility: string[];
   documents: string[];
+  /** Optional grouped documents (e.g. Salaried vs Self-Employed). When set, rendered instead of the flat documents list. */
+  documentGroups?: DocGroup[];
+  /** Optional heading override for the Documents Required block. */
+  documentsHeading?: string;
   highlights: { label: string; value: string }[];
+  faqs?: FAQ[];
+  seo?: SEOSection[];
+  disclaimer?: string;
 };
 
 const FOOTER_CONTACT = {
@@ -30,9 +41,14 @@ const FOOTER_CONTACT = {
 export default function LoanPage({ config }: { config: LoanConfig }) {
   const [form, setForm] = useState({ name: "", phone: "", business: "", city: "", loan: "", email: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.phone.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
     await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -59,8 +75,9 @@ export default function LoanPage({ config }: { config: LoanConfig }) {
       {/* Hero */}
       <section
         style={{
-          background: `linear-gradient(135deg, ${NAVY} 0%, #1a3f7a 55%, ${BLUE} 100%)`,
+          background: "linear-gradient(135deg, #eef5ff 0%, #ffffff 60%, #f5f9ff 100%)",
           padding: "64px 5%",
+          borderBottom: "1px solid #e8eef7",
         }}
       >
         <div
@@ -77,41 +94,41 @@ export default function LoanPage({ config }: { config: LoanConfig }) {
             <div
               style={{
                 display: "inline-block",
-                background: "rgba(255,255,255,0.12)",
-                color: "#fff",
+                background: config.color,
+                color: config.accent,
                 padding: "5px 14px",
                 borderRadius: 20,
                 fontSize: 11,
                 fontWeight: 700,
                 marginBottom: 20,
-                border: "1px solid rgba(255,255,255,0.2)",
+                border: `1px solid ${config.border}`,
                 letterSpacing: 1,
               }}
             >
               BIZZBUDDY {config.title.toUpperCase()}
             </div>
-            <h1 style={{ fontSize: 42, fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 16 }}>
+            <h1 style={{ fontSize: 42, fontWeight: 900, color: NAVY, lineHeight: 1.2, marginBottom: 16 }}>
               {config.icon} {config.title}
             </h1>
-            <p style={{ fontSize: 18, color: "rgba(255,255,255,0.85)", marginBottom: 12, fontWeight: 600 }}>
+            <p style={{ fontSize: 18, color: config.accent, marginBottom: 12, fontWeight: 700 }}>
               {config.tagline}
             </p>
-            <p style={{ fontSize: 15, color: "rgba(255,255,255,0.65)", lineHeight: 1.8, marginBottom: 32 }}>
+            <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.8, marginBottom: 32 }}>
               {config.desc}
             </p>
             {/* Key numbers */}
             <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
               {config.highlights.map((h) => (
                 <div key={h.label}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: "#93c5fd" }}>{h.value}</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>{h.label}</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: config.accent }}>{h.value}</div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>{h.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Application form */}
-          <div style={{ background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 24px 64px rgba(0,0,0,0.25)" }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 18px 50px rgba(21,101,192,0.15)", border: "1px solid #e2e8f0" }}>
             {submitted ? (
               <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <div
@@ -173,7 +190,17 @@ export default function LoanPage({ config }: { config: LoanConfig }) {
                       placeholder={placeholder}
                       required={req}
                       value={form[name]}
-                      onChange={(e) => setForm((p) => ({ ...p, [name]: e.target.value }))}
+                      inputMode={name === "phone" ? "numeric" : undefined}
+                      maxLength={name === "phone" ? 10 : undefined}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          [name]:
+                            name === "phone"
+                              ? e.target.value.replace(/\D/g, "").slice(0, 10)
+                              : e.target.value,
+                        }))
+                      }
                       style={{
                         padding: "11px 14px",
                         border: "1.5px solid #e2e8f0",
@@ -321,45 +348,196 @@ export default function LoanPage({ config }: { config: LoanConfig }) {
           </div>
           <div>
             <h2 style={{ fontSize: 26, fontWeight: 900, color: NAVY, marginBottom: 24 }}>
-              Documents Required
+              {config.documentsHeading || "Documents Required"}
             </h2>
-            {config.documents.map((item) => (
-              <div
-                key={item}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 12,
-                  marginBottom: 14,
-                  fontSize: 14,
-                  color: "#374151",
-                  lineHeight: 1.6,
-                }}
-              >
-                <span
-                  style={{
-                    width: 22,
-                    height: 22,
-                    background: "#eff6ff",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 11,
-                    flexShrink: 0,
-                    marginTop: 1,
-                    color: BLUE,
-                    fontWeight: 700,
-                  }}
-                >
-                  📄
-                </span>
-                {item}
+            {(config.documentGroups
+              ? config.documentGroups
+              : [{ heading: "", items: config.documents }]
+            ).map((group, gi) => (
+              <div key={gi} style={{ marginBottom: config.documentGroups ? 22 : 0 }}>
+                {group.heading && (
+                  <h3
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: config.accent,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.5,
+                      marginBottom: 14,
+                    }}
+                  >
+                    {group.heading}
+                  </h3>
+                )}
+                {group.items.map((item) => (
+                  <div
+                    key={item}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 12,
+                      marginBottom: 14,
+                      fontSize: 14,
+                      color: "#374151",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 22,
+                        height: 22,
+                        background: "#eff6ff",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        flexShrink: 0,
+                        marginTop: 1,
+                        color: BLUE,
+                        fontWeight: 700,
+                      }}
+                    >
+                      📄
+                    </span>
+                    {item}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* FAQs */}
+      {config.faqs && config.faqs.length > 0 && (
+        <section style={{ padding: "72px 5%", background: "#f8fafc" }}>
+          <div style={{ maxWidth: 880, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <div
+                style={{
+                  color: BLUE,
+                  fontWeight: 700,
+                  fontSize: 12,
+                  marginBottom: 10,
+                  textTransform: "uppercase",
+                  letterSpacing: 2,
+                }}
+              >
+                FAQs
+              </div>
+              <h2 style={{ fontSize: 34, fontWeight: 900, color: NAVY }}>
+                Frequently Asked Questions
+              </h2>
+            </div>
+            {config.faqs.map((faq, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "#fff",
+                  border: "1.5px solid #e2e8f0",
+                  borderRadius: 12,
+                  marginBottom: 12,
+                  overflow: "hidden",
+                }}
+              >
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  style={{
+                    width: "100%",
+                    background: "none",
+                    border: "none",
+                    padding: "18px 22px",
+                    textAlign: "left",
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: NAVY,
+                    cursor: "pointer",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 16,
+                    fontFamily: "'Inter', sans-serif",
+                  }}
+                >
+                  {faq.q}
+                  <span style={{ color: config.accent, fontSize: 18, flexShrink: 0 }}>
+                    {openFaq === i ? "−" : "+"}
+                  </span>
+                </button>
+                {openFaq === i && (
+                  <div
+                    style={{
+                      padding: "0 22px 20px",
+                      fontSize: 14,
+                      color: "#475569",
+                      lineHeight: 1.75,
+                    }}
+                  >
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* SEO Content */}
+      {config.seo && config.seo.length > 0 && (
+        <section style={{ padding: "72px 5%", background: "#fff" }}>
+          <div style={{ maxWidth: 920, margin: "0 auto" }}>
+            {config.seo.map((sec, i) => (
+              <div key={i} style={{ marginBottom: 36 }}>
+                <h2 style={{ fontSize: 24, fontWeight: 900, color: NAVY, marginBottom: 14 }}>
+                  {sec.heading}
+                </h2>
+                {sec.body && (
+                  <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.85, marginBottom: sec.bullets ? 14 : 0 }}>
+                    {sec.body}
+                  </p>
+                )}
+                {sec.bullets && (
+                  <ul style={{ paddingLeft: 0, listStyle: "none", margin: 0 }}>
+                    {sec.bullets.map((b) => (
+                      <li
+                        key={b}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 10,
+                          marginBottom: 10,
+                          fontSize: 15,
+                          color: "#374151",
+                          lineHeight: 1.7,
+                        }}
+                      >
+                        <span style={{ color: config.accent, fontWeight: 900, flexShrink: 0 }}>›</span>
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+            {config.disclaimer && (
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "#94a3b8",
+                  fontStyle: "italic",
+                  lineHeight: 1.7,
+                  borderTop: "1px solid #e2e8f0",
+                  paddingTop: 20,
+                  marginTop: 8,
+                }}
+              >
+                {config.disclaimer}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* CTA Strip */}
       <section

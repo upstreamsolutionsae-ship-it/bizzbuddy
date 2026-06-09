@@ -6,6 +6,22 @@ import Navbar from "@/components/Navbar";
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
 
+const LOAN_ROUTE: Record<string, string> = {
+  "Home Loan": "/loans/home-loan",
+  "Personal Loan": "/loans/personal-loan",
+  "Business Loan": "/loans/business-loan",
+  "Working Capital": "/loans/working-capital",
+  "Loan Against Property": "/loans/loan-against-property",
+};
+
+type Result = {
+  eligible: boolean;
+  leadOnly?: boolean;
+  maxAmount: string;
+  rate: string;
+  reason: string;
+};
+
 export default function EligibilityCheckPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
@@ -15,9 +31,34 @@ export default function EligibilityCheckPage() {
     cibil: "",
     age: "",
     existingEmi: "",
+    phone: "",
     amount: "",
   });
-  const [result, setResult] = useState<{ eligible: boolean; maxAmount: string; rate: string; reason: string } | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
+
+  // Business Loan & LAP depend on too many factors — collect a mobile number and route to an executive.
+  const isLeadOnly = form.loanType === "Business Loan" || form.loanType === "Loan Against Property";
+
+  const submitLead = async () => {
+    if (form.phone.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone: form.phone,
+        loanType: form.loanType,
+        employment: form.employment,
+        age: form.age,
+        income: form.income,
+        source: "eligibility-tool",
+      }),
+    });
+    setResult({ eligible: true, leadOnly: true, maxAmount: "", rate: "", reason: "" });
+    setStep(3);
+  };
 
   const calculate = () => {
     const income = Number(form.income);
@@ -47,6 +88,8 @@ export default function EligibilityCheckPage() {
     setStep(3);
   };
 
+  const applyHref = LOAN_ROUTE[form.loanType] || "/loans/business-loan";
+
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", color: "#1a202c", background: "#fff" }}>
       <Navbar />
@@ -54,15 +97,15 @@ export default function EligibilityCheckPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto", fontSize: 13, color: "#64748b" }}>
           <Link href="/" style={{ color: BLUE, textDecoration: "none" }}>Home</Link>
           <span style={{ margin: "0 8px" }}>›</span>
-          <span>Tools</span>
+          <Link href="/tools" style={{ color: BLUE, textDecoration: "none" }}>Tools</Link>
           <span style={{ margin: "0 8px" }}>›</span>
           <span style={{ color: "#374151", fontWeight: 600 }}>Eligibility Check</span>
         </div>
       </div>
 
-      <section style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, padding: "56px 5%", textAlign: "center" }}>
-        <h1 style={{ fontSize: 40, fontWeight: 900, color: "#fff", marginBottom: 12 }}>Loan Eligibility Check</h1>
-        <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 16 }}>Find out how much loan you are eligible for — in 2 minutes</p>
+      <section style={{ background: "linear-gradient(135deg, #eef5ff 0%, #ffffff 60%, #f5f9ff 100%)", padding: "56px 5%", textAlign: "center", borderBottom: "1px solid #e8eef7" }}>
+        <h1 style={{ fontSize: 40, fontWeight: 900, color: NAVY, marginBottom: 12 }}>Loan Eligibility Check</h1>
+        <p style={{ color: "#475569", fontSize: 16 }}>Find out how much loan you are eligible for — in 2 minutes</p>
       </section>
 
       <section style={{ padding: "64px 5%", background: "#f8fafc" }}>
@@ -86,14 +129,14 @@ export default function EligibilityCheckPage() {
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Type of Loan</label>
                     <select value={form.loanType} onChange={(e) => setForm((p) => ({ ...p, loanType: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
                       <option value="">Select loan type</option>
-                      {["Home Loan", "Personal Loan", "Business Loan", "Car Loan", "Loan Against Property"].map((o) => <option key={o}>{o}</option>)}
+                      {["Home Loan", "Personal Loan", "Business Loan", "Working Capital", "Loan Against Property"].map((o) => <option key={o}>{o}</option>)}
                     </select>
                   </div>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Employment Type</label>
                     <select value={form.employment} onChange={(e) => setForm((p) => ({ ...p, employment: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
                       <option value="">Select employment type</option>
-                      {["Salaried", "Self-Employed", "Business Owner", "Professional (Doctor/CA/Lawyer)"].map((o) => <option key={o}>{o}</option>)}
+                      {["Salaried", "Self-Employed / Business Owner", "Professional (Doctor/CA/Lawyer)"].map((o) => <option key={o}>{o}</option>)}
                     </select>
                   </div>
                   <div>
@@ -119,28 +162,65 @@ export default function EligibilityCheckPage() {
                     <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Existing Monthly EMIs (₹)</label>
                     <input type="number" placeholder="Enter 0 if none" value={form.existingEmi} onChange={(e) => setForm((p) => ({ ...p, existingEmi: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box" }} />
                   </div>
-                  <div>
-                    <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>CIBIL Credit Score (approximate)</label>
-                    <select value={form.cibil} onChange={(e) => setForm((p) => ({ ...p, cibil: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
-                      <option value="">Select CIBIL range</option>
-                      <option value="780">750+ (Excellent)</option>
-                      <option value="720">700–749 (Good)</option>
-                      <option value="670">650–699 (Average)</option>
-                      <option value="620">600–649 (Poor)</option>
-                      <option value="550">Below 600 (Very Poor)</option>
-                    </select>
-                  </div>
+
+                  {isLeadOnly ? (
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Mobile Number</label>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        placeholder="10-digit mobile number"
+                        value={form.phone}
+                        onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                        style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box" }}
+                      />
+                      <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>
+                        {form.loanType} eligibility depends on multiple factors — our executive will review your profile.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>CIBIL Credit Score (approximate)</label>
+                      <select value={form.cibil} onChange={(e) => setForm((p) => ({ ...p, cibil: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
+                        <option value="">Select CIBIL range</option>
+                        <option value="780">750+ (Excellent)</option>
+                        <option value="720">700–749 (Good)</option>
+                        <option value="670">650–699 (Average)</option>
+                        <option value="620">600–649 (Poor)</option>
+                        <option value="550">Below 600 (Very Poor)</option>
+                      </select>
+                    </div>
+                  )}
+
                   <div style={{ display: "flex", gap: 12 }}>
                     <button onClick={() => setStep(1)} style={{ flex: 1, background: "#f1f5f9", color: "#374151", padding: "13px", borderRadius: 10, fontWeight: 600, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif" }}>← Back</button>
-                    <button onClick={calculate} disabled={!form.income || !form.cibil} style={{ flex: 2, background: form.income && form.cibil ? `linear-gradient(135deg, ${NAVY}, ${BLUE})` : "#e2e8f0", color: form.income && form.cibil ? "#fff" : "#94a3b8", padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: form.income && form.cibil ? "pointer" : "not-allowed", fontFamily: "'Inter', sans-serif" }}>
-                      Check Eligibility →
-                    </button>
+                    {isLeadOnly ? (
+                      <button onClick={submitLead} disabled={form.phone.length !== 10} style={{ flex: 2, background: form.phone.length === 10 ? `linear-gradient(135deg, ${NAVY}, ${BLUE})` : "#e2e8f0", color: form.phone.length === 10 ? "#fff" : "#94a3b8", padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: form.phone.length === 10 ? "pointer" : "not-allowed", fontFamily: "'Inter', sans-serif" }}>
+                        Submit →
+                      </button>
+                    ) : (
+                      <button onClick={calculate} disabled={!form.income || !form.cibil} style={{ flex: 2, background: form.income && form.cibil ? `linear-gradient(135deg, ${NAVY}, ${BLUE})` : "#e2e8f0", color: form.income && form.cibil ? "#fff" : "#94a3b8", padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: form.income && form.cibil ? "pointer" : "not-allowed", fontFamily: "'Inter', sans-serif" }}>
+                        Check Eligibility →
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             )}
 
-            {step === 3 && result && (
+            {step === 3 && result && result.leadOnly && (
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
+                <h2 style={{ fontSize: 24, fontWeight: 900, color: "#15803d", marginBottom: 12 }}>Request Received</h2>
+                <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.7, marginBottom: 24 }}>
+                  Thank you! Our executive will get in touch with you within 2 working hours regarding your {form.loanType} requirement.
+                </p>
+                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", phone: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
+              </div>
+            )}
+
+            {step === 3 && result && !result.leadOnly && (
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 64, marginBottom: 16 }}>{result.eligible ? "✅" : "⚠️"}</div>
                 <h2 style={{ fontSize: 24, fontWeight: 900, color: result.eligible ? "#15803d" : "#dc2626", marginBottom: 12 }}>
@@ -154,7 +234,7 @@ export default function EligibilityCheckPage() {
                       <div style={{ fontSize: 13, color: "#64748b", marginTop: 8 }}>Interest rate range: {result.rate} p.a.</div>
                     </div>
                     <p style={{ fontSize: 13, color: "#64748b", marginBottom: 24 }}>{result.reason}</p>
-                    <Link href="/loans/business-loan" style={{ display: "block", background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", marginBottom: 12 }}>Apply Now →</Link>
+                    <Link href={applyHref} style={{ display: "block", background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", marginBottom: 12 }}>Apply Now →</Link>
                   </>
                 ) : (
                   <>
@@ -162,7 +242,7 @@ export default function EligibilityCheckPage() {
                     <Link href="/credit-report" style={{ display: "block", background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", marginBottom: 12 }}>Improve Credit Score</Link>
                   </>
                 )}
-                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
+                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", phone: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
               </div>
             )}
           </div>

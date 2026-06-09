@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 
 const NAVY = "#0f2d5e";
@@ -14,7 +15,7 @@ const NAV_ITEMS = [
       { label: "Home Loan", href: "/loans/home-loan" },
       { label: "Personal Loan", href: "/loans/personal-loan" },
       { label: "Business Loan", href: "/loans/business-loan" },
-      { label: "Car Loan", href: "/loans/car-loan" },
+      { label: "Working Capital Loans", href: "/loans/working-capital" },
       { label: "Loan Against Property", href: "/loans/loan-against-property" },
     ],
   },
@@ -22,10 +23,10 @@ const NAV_ITEMS = [
     label: "Investments/Insurance",
     href: "/investments",
     dropdown: [
-      { label: "Mutual Funds", href: "/investments#mutual-funds" },
-      { label: "Fixed Deposits", href: "/investments#fixed-deposits" },
-      { label: "Insurance Plans", href: "/investments#insurance" },
-      { label: "Portfolio Management", href: "/investments#portfolio" },
+      { label: "Mutual Funds", href: "/investments/mutual-funds" },
+      { label: "Fixed Deposits", href: "/investments/fixed-deposits" },
+      { label: "Insurance Plans", href: "/investments/insurance" },
+      { label: "Invest in Equity", href: "/investments/equity" },
     ],
   },
   { label: "Become Our Partner", href: "/become-our-partner" },
@@ -92,20 +93,25 @@ export default function Navbar() {
       <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
         <div
           style={{
-            width: 40,
-            height: 40,
-            borderRadius: "50%",
+            width: 44,
+            height: 44,
+            borderRadius: 12,
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             background: "#f0f4ff",
-            border: "2px solid #bfdbfe",
             flexShrink: 0,
           }}
         >
-          {/* Placeholder until real logo provided */}
-          <span style={{ fontWeight: 900, fontSize: 18, color: NAVY }}>B</span>
+          <Image
+            src="/bizzbuddy-logo.png"
+            alt="BizzBuddy"
+            width={44}
+            height={44}
+            style={{ objectFit: "cover" }}
+            priority
+          />
         </div>
         <div>
           <div style={{ fontWeight: 800, fontSize: 20, color: NAVY }}>BizzBuddy</div>

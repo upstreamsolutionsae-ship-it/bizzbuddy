@@ -1,12 +1,22 @@
 "use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
 
+const LOAN_ROUTES: [string, string][] = [
+  ["Home Loan", "/loans/home-loan"],
+  ["Personal Loan", "/loans/personal-loan"],
+  ["Business Loan", "/loans/business-loan"],
+  ["Working Capital", "/loans/working-capital"],
+  ["Loan Against Property", "/loans/loan-against-property"],
+];
+
 export default function EMICalculatorPage() {
+  const router = useRouter();
   const [principal, setPrincipal] = useState(1000000);
   const [rate, setRate] = useState(9);
   const [tenure, setTenure] = useState(5);
@@ -39,9 +49,9 @@ export default function EMICalculatorPage() {
         </div>
       </div>
 
-      <section style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, padding: "56px 5%", textAlign: "center" }}>
-        <h1 style={{ fontSize: 40, fontWeight: 900, color: "#fff", marginBottom: 12 }}>EMI Calculator</h1>
-        <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 16 }}>Calculate your monthly loan EMI instantly</p>
+      <section style={{ background: "linear-gradient(135deg, #eef5ff 0%, #ffffff 60%, #f5f9ff 100%)", padding: "56px 5%", textAlign: "center", borderBottom: "1px solid #e8eef7" }}>
+        <h1 style={{ fontSize: 40, fontWeight: 900, color: NAVY, marginBottom: 12 }}>EMI Calculator</h1>
+        <p style={{ color: "#475569", fontSize: 16 }}>Calculate your monthly loan EMI instantly</p>
       </section>
 
       <section style={{ padding: "64px 5%", background: "#f8fafc" }}>
@@ -51,10 +61,10 @@ export default function EMICalculatorPage() {
             <h2 style={{ fontSize: 22, fontWeight: 800, color: NAVY, marginBottom: 32 }}>Enter Loan Details</h2>
 
             {[
-              { label: "Loan Amount", value: principal, setValue: setPrincipal, min: 100000, max: 10000000, step: 50000, display: fmt(principal) },
-              { label: "Interest Rate (% p.a.)", value: rate, setValue: setRate, min: 5, max: 25, step: 0.25, display: `${rate}%` },
-              { label: "Loan Tenure (Years)", value: tenure, setValue: setTenure, min: 1, max: 30, step: 1, display: `${tenure} Yr${tenure > 1 ? "s" : ""}` },
-            ].map(({ label, value, setValue, min, max, step, display }) => (
+              { label: "Loan Amount", value: principal, setValue: setPrincipal, min: 100000, max: 250000000, step: 100000, display: fmt(principal), minLabel: "₹1 L", maxLabel: "₹25 Cr" },
+              { label: "Interest Rate (% p.a.)", value: rate, setValue: setRate, min: 5, max: 25, step: 0.25, display: `${rate}%`, minLabel: "5%", maxLabel: "25%" },
+              { label: "Loan Tenure (Years)", value: tenure, setValue: setTenure, min: 1, max: 30, step: 1, display: `${tenure} Yr${tenure > 1 ? "s" : ""}`, minLabel: "1 Yr", maxLabel: "30 Yrs" },
+            ].map(({ label, value, setValue, min, max, step, display, minLabel, maxLabel }) => (
               <div key={label} style={{ marginBottom: 28 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
                   <label style={{ fontSize: 14, fontWeight: 600, color: "#374151" }}>{label}</label>
@@ -70,8 +80,8 @@ export default function EMICalculatorPage() {
                   style={{ width: "100%", accentColor: BLUE }}
                 />
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 11, color: "#94a3b8" }}>
-                  <span>{min}</span>
-                  <span>{max}</span>
+                  <span>{minLabel}</span>
+                  <span>{maxLabel}</span>
                 </div>
               </div>
             ))}
@@ -117,8 +127,11 @@ export default function EMICalculatorPage() {
               </div>
             </div>
 
-            <Link
-              href="/loans/business-loan"
+            <select
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) router.push(e.target.value);
+              }}
               style={{
                 background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`,
                 color: "#fff",
@@ -126,12 +139,23 @@ export default function EMICalculatorPage() {
                 borderRadius: 12,
                 fontWeight: 700,
                 fontSize: 14,
-                textDecoration: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
                 textAlign: "center",
+                appearance: "none",
+                WebkitAppearance: "none",
               }}
             >
-              Apply for Loan →
-            </Link>
+              <option value="" disabled>
+                Apply for Loan ▾
+              </option>
+              {LOAN_ROUTES.map(([label, href]) => (
+                <option key={href} value={href} style={{ background: "#fff", color: "#1a202c" }}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </section>

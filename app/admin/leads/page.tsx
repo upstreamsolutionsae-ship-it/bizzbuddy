@@ -9,6 +9,7 @@ type Lead = {
   id: string;
   name: string;
   phone: string;
+  email?: string;
   business: string;
   city: string;
   loan: string;
@@ -169,7 +170,7 @@ export default function LeadsAdminPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                  {["ID", "Date", "Name", "Phone", "Business", "City", "Loan Amt", "Loan Type", "Source", "Status", "Action"].map((h) => (
+                  {["ID", "Date", "Name", "Phone", "Email", "Business", "City", "Loan Amt", "Loan Type", "Source", "Status", "Action"].map((h) => (
                     <th
                       key={h}
                       style={{
@@ -201,6 +202,7 @@ export default function LeadsAdminPage() {
                       </td>
                       <td style={{ padding: "12px 14px", fontSize: 14, fontWeight: 600, color: NAVY }}>{lead.name}</td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.phone}</td>
+                      <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.email || "—"}</td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.business || "—"}</td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.city || "—"}</td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.loan || "—"}</td>

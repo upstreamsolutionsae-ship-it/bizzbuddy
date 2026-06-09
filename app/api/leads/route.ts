@@ -30,15 +30,17 @@ function writeLeads(leads: Record<string, unknown>[]): void {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    if (!body.name || !body.phone) {
-      return NextResponse.json({ success: false, error: "Name and phone are required" }, { status: 400 });
+    if (!body.phone) {
+      return NextResponse.json({ success: false, error: "Phone is required" }, { status: 400 });
     }
 
     const leads = readLeads();
     const newLead = {
+      ...body,
       id: `LEAD-${Date.now()}`,
-      name: body.name,
+      name: body.name || "",
       phone: body.phone,
+      email: body.email || "",
       business: body.business || "",
       city: body.city || "",
       loan: body.loan || "",

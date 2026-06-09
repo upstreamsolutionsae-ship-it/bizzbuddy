@@ -122,7 +122,7 @@ export default function FinancialHealthCheckPage() {
                 { key: "profit", label: "Net Profit (₹ L)", placeholder: "e.g. 18" },
                 { key: "prevRevenue", label: "Previous Year Revenue (₹ L)", placeholder: "e.g. 95" },
                 { key: "assets", label: "Total Assets (₹ L)", placeholder: "e.g. 200" },
-                { key: "liabilities", label: "Total Liabilities (₹ L)", placeholder: "e.g. 90" },
+                { key: "liabilities", label: "Total Debt (₹ L)", placeholder: "e.g. 90" },
                 { key: "cash", label: "Cash & Bank Balance (₹ L)", placeholder: "e.g. 25" },
               ].map(({ key, label, placeholder }) => (
                 <div key={key} style={{ marginBottom: 16 }}>
