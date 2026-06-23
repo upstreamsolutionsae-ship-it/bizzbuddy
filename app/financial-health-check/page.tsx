@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend } from "recharts";
 import Navbar from "@/components/Navbar";
+import Speedometer, { bucketOf } from "@/components/Speedometer";
 
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
@@ -56,23 +56,66 @@ export default function FinancialHealthCheckPage() {
     { label: "YoY Revenue Growth", value: r > 0 && pr > 0 ? growth : null, display: r > 0 && pr > 0 ? `${growth > 0 ? "+" : ""}${growth.toFixed(1)}%` : "—", good: growth > 15, hint: "Strong: > 15%" },
   ];
 
-  const barData =
+  // Normalised 0–100 scores for the speedometers (3 equal buckets: Low / Medium / High)
+  const clamp = (n: number) => Math.min(100, Math.max(0, n));
+  const gauges =
     r > 0
       ? [
-          { name: "Profit Margin", yours: parseFloat(profitMargin.toFixed(1)), benchmark: 10 },
-          { name: "ROA", yours: parseFloat(roa.toFixed(1)), benchmark: 8 },
-          { name: "YoY Growth", yours: pr > 0 ? parseFloat(growth.toFixed(1)) : 0, benchmark: 15 },
-        ]
-      : [];
-
-  const radarData =
-    r > 0
-      ? [
-          { subject: "Profitability", A: Math.min(100, Math.max(0, profitMargin * 4)), fullMark: 100 },
-          { subject: "Asset Efficiency", A: Math.min(100, Math.max(0, roa * 6)), fullMark: 100 },
-          { subject: "Debt Safety", A: Math.min(100, Math.max(0, (1 - debtRatio) * 100)), fullMark: 100 },
-          { subject: "Liquidity", A: Math.min(100, Math.max(0, cashRatio * 50)), fullMark: 100 },
-          { subject: "Growth", A: pr > 0 ? Math.min(100, Math.max(0, growth * 2.5)) : 0, fullMark: 100 },
+          {
+            key: "growth",
+            label: "Growth",
+            score: pr > 0 ? clamp(growth * 2.5) : 0,
+            display: pr > 0 ? `${growth > 0 ? "+" : ""}${growth.toFixed(1)}%` : "—",
+            analysis: {
+              Low: "Revenue growth is slow or flat. Focus on new customers, pricing and expanding your sales channels to grow your top line.",
+              Medium: "You are growing steadily. Keep the momentum with consistent marketing and by retaining existing customers.",
+              High: "Excellent growth. Make sure your cash flow and team can keep up with the increasing demand.",
+            },
+          },
+          {
+            key: "profitability",
+            label: "Profitability",
+            score: clamp(profitMargin * 4),
+            display: `${profitMargin.toFixed(1)}% margin`,
+            analysis: {
+              Low: "Your profit margin is thin. Review pricing, cut avoidable costs and drop low-margin products to keep more of every rupee earned.",
+              Medium: "Healthy profitability. Small improvements in pricing or cost control can push you into the strong zone.",
+              High: "Strong profit margins. You have room to reinvest in growth or build a cash reserve.",
+            },
+          },
+          {
+            key: "asset",
+            label: "Asset Efficiency",
+            score: clamp(roa * 6),
+            display: `${roa.toFixed(1)}% ROA`,
+            analysis: {
+              Low: "Your assets are not generating enough profit. Use idle assets better or reduce capital tied up in slow-moving stock.",
+              Medium: "Reasonable use of assets. Improving sales without adding assets will lift this further.",
+              High: "You are generating strong returns from your assets — a sign of an efficient business.",
+            },
+          },
+          {
+            key: "debt",
+            label: "Debt Safety",
+            score: clamp((1 - debtRatio) * 100),
+            display: `Debt/Assets ${debtRatio.toFixed(2)}`,
+            analysis: {
+              Low: "Debt is high relative to your assets. Avoid fresh borrowing and prioritise repaying existing loans to lower risk.",
+              Medium: "Your debt level is manageable. Keep an eye on it before taking on major new loans.",
+              High: "Low debt and a strong balance sheet. You have comfortable capacity to borrow for growth if needed.",
+            },
+          },
+          {
+            key: "liquidity",
+            label: "Liquidity",
+            score: clamp(cashRatio * 50),
+            display: `${cashRatio.toFixed(2)}x cover`,
+            analysis: {
+              Low: "Cash is tight against your obligations. Build a buffer and speed up collections to avoid cash-flow stress.",
+              Medium: "You have adequate cash cover. Maintain a steady reserve for unexpected expenses.",
+              High: "Strong liquidity. You can meet short-term obligations comfortably and handle surprises.",
+            },
+          },
         ]
       : [];
 
@@ -81,7 +124,7 @@ export default function FinancialHealthCheckPage() {
     await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...leadForm, loanType: "Financial Advisory / Health Check", source: "health-check-page", score }),
+      body: JSON.stringify({ ...leadForm, category: "Financial Health Check", loanType: "Financial Advisory / Health Check", source: "health-check-page", score }),
     });
     setLeadSent(true);
   };
@@ -185,50 +228,58 @@ export default function FinancialHealthCheckPage() {
                 ))}
               </div>
 
-              {/* Charts */}
-              {r > 0 && barData.length > 0 && (
+              {/* Speedometers */}
+              {r > 0 && gauges.length > 0 && (
                 <div style={{ background: "#fff", borderRadius: 20, padding: 28, border: "1px solid #e2e8f0" }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 16 }}>Yours vs Benchmark</h3>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <BarChart data={barData} barGap={4}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                      <XAxis dataKey="name" fontSize={11} />
-                      <YAxis fontSize={11} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="yours" fill={NAVY} radius={[4, 4, 0, 0]} name="Yours" />
-                      <Bar dataKey="benchmark" fill="#93c5fd" radius={[4, 4, 0, 0]} name="Benchmark" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Your Business Health Meters</h3>
+                  <p style={{ fontSize: 12.5, color: "#64748b", marginBottom: 18 }}>Each meter has 3 zones — Low, Medium, High.</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 18 }}>
+                    {gauges.map((g) => (
+                      <Speedometer key={g.key} label={g.label} value={g.score} display={g.display} />
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {r > 0 && radarData.length > 0 && (
+              {/* Per-parameter expert analysis */}
+              {r > 0 && gauges.length > 0 && (
                 <div style={{ background: "#fff", borderRadius: 20, padding: 28, border: "1px solid #e2e8f0" }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 16 }}>Business Health Radar</h3>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <RadarChart data={radarData}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="subject" fontSize={11} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} fontSize={10} />
-                      <Radar name="Score" dataKey="A" stroke={NAVY} fill={NAVY} fillOpacity={0.25} />
-                    </RadarChart>
-                  </ResponsiveContainer>
+                  <h3 style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 16 }}>Expert Analysis — In Simple Words</h3>
+                  {gauges.map((g) => {
+                    const b = bucketOf(g.score);
+                    const dot = b === "High" ? "#16a34a" : b === "Medium" ? "#f59e0b" : "#ef4444";
+                    return (
+                      <div key={g.key} style={{ display: "flex", gap: 12, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #f1f5f9" }}>
+                        <span style={{ width: 10, height: 10, borderRadius: "50%", background: dot, flexShrink: 0, marginTop: 5 }} />
+                        <div>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: NAVY, marginBottom: 3 }}>
+                            {g.label} — <span style={{ color: dot }}>{b}</span>
+                          </div>
+                          <p style={{ fontSize: 13, color: "#475569", lineHeight: 1.65, margin: 0 }}>{g.analysis[b]}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Expert contact */}
+              {/* Expert Analysis CTA — prominent */}
               {r > 0 && (
-                <div style={{ background: "#eff6ff", borderRadius: 20, padding: 28, border: "1.5px solid #bfdbfe" }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 4 }}>Want Expert Analysis?</h3>
-                  <p style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>Our financial advisor will review your report and provide tailored recommendations.</p>
+                <div style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, borderRadius: 20, padding: 32, boxShadow: "0 12px 36px rgba(21,101,192,0.28)", color: "#fff" }}>
+                  <span style={{ display: "inline-block", background: "rgba(255,255,255,0.18)", color: "#fff", padding: "4px 14px", borderRadius: 20, fontSize: 11, fontWeight: 800, letterSpacing: 1, marginBottom: 12, border: "1px solid rgba(255,255,255,0.25)" }}>
+                    👨‍💼 FREE EXPERT ANALYSIS
+                  </span>
+                  <h3 style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 8 }}>Talk to a Financial Expert</h3>
+                  <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.85)", marginBottom: 20, lineHeight: 1.6 }}>
+                    Our advisor will personally review your numbers and give you a tailored action plan to improve each parameter above.
+                  </p>
                   {leadSent ? (
-                    <div style={{ color: "#15803d", fontWeight: 700, fontSize: 14 }}>✅ Request received! We will contact you shortly.</div>
+                    <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "16px 18px", color: "#fff", fontWeight: 700, fontSize: 15 }}>✅ Request received! Our expert will contact you within 2 working hours.</div>
                   ) : (
                     <form onSubmit={handleLeadSubmit} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <input placeholder="Your Name *" required value={leadForm.name} onChange={(e) => setLeadForm((p) => ({ ...p, name: e.target.value }))} style={{ flex: 1, minWidth: 140, padding: "10px 14px", border: "1.5px solid #bfdbfe", borderRadius: 8, fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none" }} />
-                      <input type="tel" placeholder="Mobile *" required value={leadForm.phone} onChange={(e) => setLeadForm((p) => ({ ...p, phone: e.target.value }))} style={{ flex: 1, minWidth: 120, padding: "10px 14px", border: "1.5px solid #bfdbfe", borderRadius: 8, fontSize: 13, fontFamily: "'Inter', sans-serif", outline: "none" }} />
-                      <button type="submit" style={{ background: NAVY, color: "#fff", padding: "10px 20px", borderRadius: 8, fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap" }}>Get Advice →</button>
+                      <input placeholder="Your Name *" required value={leadForm.name} onChange={(e) => setLeadForm((p) => ({ ...p, name: e.target.value }))} style={{ flex: 1, minWidth: 150, padding: "13px 16px", border: "none", borderRadius: 10, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
+                      <input type="tel" inputMode="numeric" maxLength={10} placeholder="Mobile *" required value={leadForm.phone} onChange={(e) => setLeadForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))} style={{ flex: 1, minWidth: 130, padding: "13px 16px", border: "none", borderRadius: 10, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
+                      <button type="submit" style={{ background: "#fff", color: NAVY, padding: "13px 26px", borderRadius: 10, fontWeight: 800, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", whiteSpace: "nowrap" }}>Get Free Advice →</button>
                     </form>
                   )}
                 </div>

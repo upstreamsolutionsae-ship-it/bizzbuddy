@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import { SOCIAL_LINKS, FUND_TYPES } from "@/lib/site";
 
 const LOAN_ROUTES: [string, string][] = [
   ["Home Loan", "/loans/home-loan"],
@@ -132,7 +133,7 @@ export default function HomePage() {
     await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...leadForm, source: "homepage" }),
+      body: JSON.stringify({ ...leadForm, category: leadForm.loanType || "General Enquiry", source: "homepage" }),
     });
     setSubmitted(true);
   };
@@ -235,13 +236,13 @@ export default function HomePage() {
                   ✅
                 </div>
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 8 }}>Thank You!</h3>
-                <p style={{ color: "#64748b", fontSize: 14 }}>Our advisor will contact you within 2 hours.</p>
+                <p style={{ color: "#64748b", fontSize: 14 }}>We will get back to you within 2 working hours.</p>
               </div>
             ) : (
               <>
-                <h3 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Apply for Loan</h3>
+                <h3 style={{ fontSize: 19, fontWeight: 800, color: NAVY, marginBottom: 4, lineHeight: 1.3 }}>Need Funds? Apply for Loan or Equity here</h3>
                 <p style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>
-                  Get matched to the best lender in 2 hours
+                  Get matched to the best lender in 2 working hours
                 </p>
                 <form onSubmit={handleLeadSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {(
@@ -311,8 +312,8 @@ export default function HomePage() {
                       fontFamily: "'Inter', sans-serif",
                     }}
                   >
-                    <option value="">Type of Loan</option>
-                    {["Home Loan", "Personal Loan", "Business Loan", "Working Capital", "Loan Against Property"].map((o) => (
+                    <option value="">Type of Funds</option>
+                    {FUND_TYPES.map((o) => (
                       <option key={o}>{o}</option>
                     ))}
                   </select>
@@ -554,7 +555,7 @@ export default function HomePage() {
               One platform for all your financial growth needs
             </p>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 28, maxWidth: 800, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 28, maxWidth: 1100, margin: "0 auto" }}>
             {[
               {
                 icon: "🏦",
@@ -566,6 +567,17 @@ export default function HomePage() {
                 border: "#bfdbfe",
                 accent: BLUE,
                 loanDropdown: true,
+              },
+              {
+                icon: "📈",
+                title: "Raise Equity",
+                desc: "Connect with angel investors, PE funds, and family offices. Get investor-ready summaries generated from your financials.",
+                cta: "Explore Equity",
+                href: "/raise-equity",
+                color: "#f0fdf4",
+                border: "#bbf7d0",
+                accent: "#15803d",
+                loanDropdown: false,
               },
               {
                 icon: "💡",
@@ -913,37 +925,33 @@ export default function HomePage() {
               <div style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.7 }}>
                 📍 {FOOTER_CONTACT.address}
               </div>
-              {/* Social links */}
+              {/* Social links — URLs managed centrally in lib/site.ts (SOCIAL_LINKS). */}
               <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-                {[
-                  { label: "f", title: "Facebook", href: "#facebook" },
-                  { label: "in", title: "LinkedIn", href: "#linkedin" },
-                  { label: "X", title: "Twitter/X", href: "#twitter" },
-                  { label: "▶", title: "YouTube", href: "#youtube" },
-                  { label: "📷", title: "Instagram", href: "#instagram" },
-                ].map((s) => (
-                  <a
-                    key={s.title}
-                    href={s.href}
-                    title={s.title}
-                    style={{
-                      width: 34,
-                      height: 34,
-                      background: "rgba(255,255,255,0.1)",
-                      borderRadius: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      textDecoration: "none",
-                      fontSize: 13,
-                      fontWeight: 700,
-                      border: "1px solid rgba(255,255,255,0.15)",
-                    }}
-                  >
-                    {s.label}
-                  </a>
-                ))}
+                {SOCIAL_LINKS.map((s) => {
+                  const iconStyle: React.CSSProperties = {
+                    width: 34,
+                    height: 34,
+                    background: "rgba(255,255,255,0.1)",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    textDecoration: "none",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    border: "1px solid rgba(255,255,255,0.15)",
+                  };
+                  return s.href ? (
+                    <a key={s.key} href={s.href} title={s.title} target="_blank" rel="noopener noreferrer" style={iconStyle}>
+                      {s.label}
+                    </a>
+                  ) : (
+                    <span key={s.key} title={`${s.title} (coming soon)`} style={{ ...iconStyle, opacity: 0.55, cursor: "default" }}>
+                      {s.label}
+                    </span>
+                  );
+                })}
               </div>
             </div>
 

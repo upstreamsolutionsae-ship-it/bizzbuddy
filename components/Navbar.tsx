@@ -35,9 +35,20 @@ const NAV_ITEMS = [
     href: "/our-services",
     dropdown: [
       { label: "Financial Advisory", href: "/financial-health-check" },
+      { label: "Raise Equity", href: "/raise-equity" },
       { label: "Loan Assistance", href: "/our-services#loan-assistance" },
       { label: "Credit Improvement", href: "/our-services#credit" },
-      { label: "Documentation Support", href: "/our-services#documentation" },
+      { label: "Documentation Support", href: "/documentation-support" },
+    ],
+  },
+  {
+    label: "Documentation Support",
+    href: "/documentation-support",
+    dropdown: [
+      { label: "Loan Documentation Service", href: "/documentation-support?service=Loan%20Documentation%20Service" },
+      { label: "LEI Certificate Generation", href: "/documentation-support?service=LEI%20Certificate%20Generation" },
+      { label: "UDYAM Registration", href: "/documentation-support?service=UDYAM%20Registration" },
+      { label: "GST Registration", href: "/documentation-support?service=GST%20Registration" },
     ],
   },
   {
@@ -48,7 +59,7 @@ const NAV_ITEMS = [
       { label: "EMI Calculator", href: "/tools/emi-calculator" },
       { label: "Currency Converter", href: "/tools/currency-converter" },
       { label: "IFSC Locator", href: "/tools/ifsc-locator" },
-      { label: "Today's Gold Price", href: "/tools/gold-price" },
+      { label: "Today's Indices", href: "/tools/gold-price" },
     ],
   },
   { label: "Credit Report", href: "/credit-report" },
@@ -337,7 +348,7 @@ export default function Navbar() {
       )}
 
       <style>{`
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
           .mobile-hamburger { display: block !important; }
           nav > div:nth-child(2) { display: none !important; }
         }

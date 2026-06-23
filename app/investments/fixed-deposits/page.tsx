@@ -12,7 +12,7 @@ const config: InvestConfig = {
   accent: "#15803d",
   fields: [
     { kind: "text", name: "amount", placeholder: "Approx Amount (₹)" },
-    { kind: "select", name: "tenor", placeholder: "Tenor Targeted", options: ["0–6 months", "6 months to 12 months", "12 to 18 months", "18 to 36 months", "36+ months"] },
+    { kind: "select", name: "tenor", placeholder: "Select Tenure", options: ["0–6 months", "6 months to 12 months", "12 to 18 months", "18 to 36 months", "36+ months"] },
   ],
 };
 

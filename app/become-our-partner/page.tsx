@@ -44,7 +44,7 @@ export default function BecomePartnerPage() {
     await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, loanType: `Partner: ${form.partnerType}`, source: "partner-page" }),
+      body: JSON.stringify({ ...form, category: "Partner Registration", loanType: `Partner: ${form.partnerType}`, source: "partner-page" }),
     });
     setSubmitted(true);
   };
@@ -103,7 +103,7 @@ export default function BecomePartnerPage() {
                   <input type="email" placeholder="Email Address *" required value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
                   <select value={form.partnerType} onChange={(e) => setForm((p) => ({ ...p, partnerType: e.target.value }))} required style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, color: form.partnerType ? "#1a202c" : "#9ca3af", fontFamily: "'Inter', sans-serif" }}>
                     <option value="">Type of Partner *</option>
-                    {["DSA / Loan Agent", "CA / Tax Consultant", "Real Estate Agent", "Financial Advisor", "Bank / NBFC Agent", "Other"].map((o) => (<option key={o}>{o}</option>))}
+                    {["DSA / Loan Agent", "CA / Tax Consultant", "Real Estate Agent", "Financial Advisor", "Bank / NBFC Agent", "Equity Partner", "Insurance Partner", "Other"].map((o) => (<option key={o}>{o}</option>))}
                   </select>
                   <input placeholder="City" value={form.city} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
                   <select value={form.experience} onChange={(e) => setForm((p) => ({ ...p, experience: e.target.value }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, color: form.experience ? "#1a202c" : "#9ca3af", fontFamily: "'Inter', sans-serif" }}>

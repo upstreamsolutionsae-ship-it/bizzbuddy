@@ -6,8 +6,8 @@ import Navbar from "@/components/Navbar";
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
 
-// Static rates relative to USD (approximate; in production these would come from a live API)
-const RATES: Record<string, number> = {
+// Fallback rates relative to USD (used until live rates load from /api/market).
+const FALLBACK_RATES: Record<string, number> = {
   USD: 1, EUR: 0.92, GBP: 0.79, INR: 83.5, AED: 3.67,
   SGD: 1.34, CAD: 1.36, AUD: 1.53, JPY: 149.5, CHF: 0.89,
   CNY: 7.24, HKD: 7.82, MYR: 4.72, THB: 35.2, SAR: 3.75,
@@ -26,6 +26,34 @@ export default function CurrencyConverterPage() {
   const [from, setFrom] = useState("USD");
   const [to, setTo] = useState("INR");
   const [result, setResult] = useState<number | null>(null);
+  const [RATES, setRates] = useState<Record<string, number>>(FALLBACK_RATES);
+  const [live, setLive] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState("");
+
+  // Fetch live exchange rates once on mount.
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/market");
+        const data = await res.json();
+        if (!active || !data?.fx?.live || !data.fx.rates) return;
+        // Keep only the currencies we display, falling back where the API lacks one.
+        const merged: Record<string, number> = { ...FALLBACK_RATES };
+        for (const k of Object.keys(FALLBACK_RATES)) {
+          if (typeof data.fx.rates[k] === "number") merged[k] = data.fx.rates[k];
+        }
+        setRates(merged);
+        setLive(true);
+        setUpdatedAt(
+          new Date(data.updatedAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+        );
+      } catch {
+        /* keep fallback rates */
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     const a = parseFloat(amount);
@@ -34,7 +62,7 @@ export default function CurrencyConverterPage() {
     } else {
       setResult(null);
     }
-  }, [amount, from, to]);
+  }, [amount, from, to, RATES]);
 
   const swap = () => { setFrom(to); setTo(from); };
 
@@ -53,7 +81,9 @@ export default function CurrencyConverterPage() {
 
       <section style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, padding: "56px 5%", textAlign: "center" }}>
         <h1 style={{ fontSize: 40, fontWeight: 900, color: "#fff", marginBottom: 12 }}>Currency Converter</h1>
-        <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 16 }}>Live indicative exchange rates</p>
+        <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 16 }}>
+          {live ? `🟢 Live exchange rates • Updated ${updatedAt}` : "Loading live exchange rates…"}
+        </p>
       </section>
 
       <section style={{ padding: "64px 5%", background: "#f8fafc" }}>

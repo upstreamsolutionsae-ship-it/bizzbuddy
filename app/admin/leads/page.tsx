@@ -12,9 +12,12 @@ type Lead = {
   email?: string;
   business: string;
   city: string;
+  category?: string;
   loan: string;
   loanType: string;
+  details?: string;
   source: string;
+  origin?: string;
   status: string;
   createdAt: string;
 };
@@ -31,6 +34,7 @@ export default function LeadsAdminPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const [search, setSearch] = useState("");
 
   const fetchLeads = useCallback(async () => {
@@ -57,14 +61,21 @@ export default function LeadsAdminPage() {
     fetchLeads();
   };
 
+  const categories = Array.from(
+    new Set(leads.map((l) => l.category || l.loanType).filter(Boolean) as string[])
+  ).sort();
+
   const filtered = leads.filter((l) => {
+    const cat = l.category || l.loanType || "";
     const matchStatus = filter === "All" || l.status === filter;
+    const matchCategory = categoryFilter === "All" || cat === categoryFilter;
     const matchSearch =
       !search ||
       l.name?.toLowerCase().includes(search.toLowerCase()) ||
       l.phone?.includes(search) ||
-      l.city?.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
+      l.city?.toLowerCase().includes(search.toLowerCase()) ||
+      cat.toLowerCase().includes(search.toLowerCase());
+    return matchStatus && matchCategory && matchSearch;
   });
 
   return (
@@ -133,6 +144,25 @@ export default function LeadsAdminPage() {
               outline: "none",
             }}
           />
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            style={{
+              padding: "10px 14px",
+              border: "1.5px solid #e2e8f0",
+              borderRadius: 8,
+              fontSize: 14,
+              fontFamily: "'Inter', sans-serif",
+              color: NAVY,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            <option value="All">All Categories</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
           <button
             onClick={fetchLeads}
             style={{
@@ -170,7 +200,7 @@ export default function LeadsAdminPage() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-                  {["ID", "Date", "Name", "Phone", "Email", "Business", "City", "Loan Amt", "Loan Type", "Source", "Status", "Action"].map((h) => (
+                  {["ID", "Date", "Name", "Phone", "Email", "Business", "City", "Category", "Amount", "Source", "Status", "Action"].map((h) => (
                     <th
                       key={h}
                       style={{
@@ -205,9 +235,18 @@ export default function LeadsAdminPage() {
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.email || "—"}</td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.business || "—"}</td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.city || "—"}</td>
+                      <td style={{ padding: "12px 14px" }}>
+                        <span style={{ background: "#eef2ff", color: "#4338ca", padding: "3px 9px", borderRadius: 16, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
+                          {lead.category || lead.loanType || "—"}
+                        </span>
+                      </td>
                       <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.loan || "—"}</td>
-                      <td style={{ padding: "12px 14px", fontSize: 13, color: "#374151" }}>{lead.loanType || "—"}</td>
-                      <td style={{ padding: "12px 14px", fontSize: 12, color: "#64748b" }}>{lead.source}</td>
+                      <td style={{ padding: "12px 14px", fontSize: 12, color: "#64748b", whiteSpace: "nowrap" }}>
+                        {lead.source}
+                        {lead.origin === "external" && (
+                          <span style={{ marginLeft: 6, background: "#fef3c7", color: "#b45309", padding: "2px 6px", borderRadius: 10, fontSize: 10, fontWeight: 700 }}>ext</span>
+                        )}
+                      </td>
                       <td style={{ padding: "12px 14px" }}>
                         <span
                           style={{

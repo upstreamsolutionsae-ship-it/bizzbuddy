@@ -20,6 +20,7 @@ type Result = {
   maxAmount: string;
   rate: string;
   reason: string;
+  disclaimer?: string;
 };
 
 export default function EligibilityCheckPage() {
@@ -31,6 +32,7 @@ export default function EligibilityCheckPage() {
     cibil: "",
     age: "",
     existingEmi: "",
+    tenure: "",
     phone: "",
     amount: "",
   });
@@ -49,6 +51,7 @@ export default function EligibilityCheckPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         phone: form.phone,
+        category: form.loanType,
         loanType: form.loanType,
         employment: form.employment,
         age: form.age,
@@ -60,29 +63,64 @@ export default function EligibilityCheckPage() {
     setStep(3);
   };
 
+  // Annual interest rate (and display range) by loan type + selected CIBIL range.
+  const RATE_TABLE: Record<string, Record<string, { r: number; label: string }>> = {
+    "Home Loan": {
+      "750+": { r: 0.085, label: "8.5%–9.25%" },
+      "700–749": { r: 0.0925, label: "9.25%–10%" },
+      "650–699": { r: 0.10, label: "10%–11%" },
+      "600–649": { r: 0.1075, label: "10.75%–12%" },
+    },
+    "Personal Loan": {
+      "750+": { r: 0.105, label: "10.5%–12%" },
+      "700–749": { r: 0.13, label: "13%–15%" },
+      "650–699": { r: 0.155, label: "15%–18%" },
+      "600–649": { r: 0.18, label: "18%–22%" },
+    },
+    "Working Capital": {
+      "750+": { r: 0.13, label: "13%–15%" },
+      "700–749": { r: 0.145, label: "14.5%–16%" },
+      "650–699": { r: 0.16, label: "16%–18%" },
+      "600–649": { r: 0.18, label: "18%–20%" },
+    },
+  };
+  const DEFAULT_RATE: Record<string, { r: number; label: string }> = {
+    "750+": { r: 0.115, label: "11.5%–13%" },
+    "700–749": { r: 0.135, label: "13.5%–15%" },
+    "650–699": { r: 0.155, label: "15%–17%" },
+    "600–649": { r: 0.18, label: "18%–20%" },
+  };
+
   const calculate = () => {
     const income = Number(form.income);
     const emi = Number(form.existingEmi) || 0;
-    const disposable = income - emi;
+    const disposable = Math.max(0, income - emi);
+    // FOIR — lenders typically allow ~55% of net income to go toward EMIs.
     const maxEMI = disposable * 0.55;
-    const cibil = Number(form.cibil);
+    const cibilRange = form.cibil; // selected range label, e.g. "750+"
+    const tenureYears = Number(form.tenure) || 0;
 
-    if (cibil < 600) {
-      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "CIBIL score below 600. Improve credit score first." });
+    const disclaimer = "This is a tentative amount which may vary from lender to lender as per their policy.";
+
+    if (cibilRange === "Below 600") {
+      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "CIBIL score below 600. Improve your credit score first.", disclaimer });
     } else if (Number(form.age) < 21 || Number(form.age) > 65) {
-      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "Age not within eligible range (21–65 years)." });
+      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "Age not within eligible range (21–65 years).", disclaimer });
     } else if (income < 20000) {
-      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "Monthly income below minimum requirement." });
+      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "Monthly income below the minimum requirement.", disclaimer });
+    } else if (tenureYears <= 0) {
+      setResult({ eligible: false, maxAmount: "—", rate: "—", reason: "Please select an expected loan tenure to estimate eligibility.", disclaimer });
     } else {
-      const tenureMonths = 60;
-      const r = 0.0092;
-      const maxLoan = Math.round((maxEMI / r) * (1 - Math.pow(1 + r, -tenureMonths)));
-      const rate = cibil >= 750 ? "10.5%–12%" : cibil >= 700 ? "12%–14%" : "14%–16%";
+      const rateInfo = (RATE_TABLE[form.loanType] || DEFAULT_RATE)[cibilRange] || DEFAULT_RATE[cibilRange] || { r: 0.12, label: "12%–15%" };
+      const monthly = rateInfo.r / 12;
+      const n = tenureYears * 12;
+      const maxLoan = Math.round((maxEMI / monthly) * (1 - Math.pow(1 + monthly, -n)));
       setResult({
         eligible: true,
         maxAmount: new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(maxLoan),
-        rate,
-        reason: `Based on your income of ₹${income.toLocaleString("en-IN")}/month and CIBIL score of ${cibil}.`,
+        rate: rateInfo.label,
+        reason: `Based on your income of ₹${income.toLocaleString("en-IN")}/month, selected CIBIL range of ${cibilRange}, and a ${tenureYears}-year tenure.`,
+        disclaimer,
       });
     }
     setStep(3);
@@ -180,17 +218,28 @@ export default function EligibilityCheckPage() {
                       </p>
                     </div>
                   ) : (
-                    <div>
-                      <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>CIBIL Credit Score (approximate)</label>
-                      <select value={form.cibil} onChange={(e) => setForm((p) => ({ ...p, cibil: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
-                        <option value="">Select CIBIL range</option>
-                        <option value="780">750+ (Excellent)</option>
-                        <option value="720">700–749 (Good)</option>
-                        <option value="670">650–699 (Average)</option>
-                        <option value="620">600–649 (Poor)</option>
-                        <option value="550">Below 600 (Very Poor)</option>
-                      </select>
-                    </div>
+                    <>
+                      <div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>CIBIL Credit Score (approximate)</label>
+                        <select value={form.cibil} onChange={(e) => setForm((p) => ({ ...p, cibil: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
+                          <option value="">Select CIBIL range</option>
+                          <option value="750+">750+ (Excellent)</option>
+                          <option value="700–749">700–749 (Good)</option>
+                          <option value="650–699">650–699 (Average)</option>
+                          <option value="600–649">600–649 (Poor)</option>
+                          <option value="Below 600">Below 600 (Very Poor)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Expected Tenure of the Loan</label>
+                        <select value={form.tenure} onChange={(e) => setForm((p) => ({ ...p, tenure: e.target.value }))} style={{ width: "100%", padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
+                          <option value="">Select tenure</option>
+                          {["1", "2", "3", "5", "7", "10", "15", "20", "25", "30"].map((y) => (
+                            <option key={y} value={y}>{y} {y === "1" ? "year" : "years"}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
                   )}
 
                   <div style={{ display: "flex", gap: 12 }}>
@@ -200,7 +249,7 @@ export default function EligibilityCheckPage() {
                         Submit →
                       </button>
                     ) : (
-                      <button onClick={calculate} disabled={!form.income || !form.cibil} style={{ flex: 2, background: form.income && form.cibil ? `linear-gradient(135deg, ${NAVY}, ${BLUE})` : "#e2e8f0", color: form.income && form.cibil ? "#fff" : "#94a3b8", padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: form.income && form.cibil ? "pointer" : "not-allowed", fontFamily: "'Inter', sans-serif" }}>
+                      <button onClick={calculate} disabled={!form.income || !form.cibil || !form.tenure} style={{ flex: 2, background: form.income && form.cibil && form.tenure ? `linear-gradient(135deg, ${NAVY}, ${BLUE})` : "#e2e8f0", color: form.income && form.cibil && form.tenure ? "#fff" : "#94a3b8", padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: form.income && form.cibil && form.tenure ? "pointer" : "not-allowed", fontFamily: "'Inter', sans-serif" }}>
                         Check Eligibility →
                       </button>
                     )}
@@ -216,7 +265,7 @@ export default function EligibilityCheckPage() {
                 <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.7, marginBottom: 24 }}>
                   Thank you! Our executive will get in touch with you within 2 working hours regarding your {form.loanType} requirement.
                 </p>
-                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", phone: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
+                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", tenure: "", phone: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
               </div>
             )}
 
@@ -242,7 +291,12 @@ export default function EligibilityCheckPage() {
                     <Link href="/credit-report" style={{ display: "block", background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, color: "#fff", padding: "14px", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", marginBottom: 12 }}>Improve Credit Score</Link>
                   </>
                 )}
-                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", phone: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
+                {result.disclaimer && (
+                  <p style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic", lineHeight: 1.6, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
+                    {result.disclaimer}
+                  </p>
+                )}
+                <button onClick={() => { setStep(1); setResult(null); setForm({ loanType: "", employment: "", income: "", cibil: "", age: "", existingEmi: "", tenure: "", phone: "", amount: "" }); }} style={{ background: "none", border: "1px solid #e2e8f0", color: "#64748b", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontFamily: "'Inter', sans-serif", fontWeight: 600, fontSize: 13 }}>Start Over</button>
               </div>
             )}
           </div>

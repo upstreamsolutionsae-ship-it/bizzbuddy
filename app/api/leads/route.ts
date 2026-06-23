@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 
 const LEADS_FILE = path.join(process.cwd(), "data", "leads.json");
+// Optional external / existing-client data source (read-only). Future model output drops here.
+const EXTERNAL_FILE = path.join(process.cwd(), "data", "external-leads.json");
 
 function readLeads(): Record<string, unknown>[] {
   try {
@@ -15,6 +17,19 @@ function readLeads(): Record<string, unknown>[] {
     }
     const raw = fs.readFileSync(LEADS_FILE, "utf-8");
     return JSON.parse(raw) as Record<string, unknown>[];
+  } catch {
+    return [];
+  }
+}
+
+// Read-only merge of the external repository so existing/previous client records and
+// model-generated top-up leads show up in admin without ever being overwritten.
+function readExternalLeads(): Record<string, unknown>[] {
+  try {
+    if (!fs.existsSync(EXTERNAL_FILE)) return [];
+    const raw = fs.readFileSync(EXTERNAL_FILE, "utf-8");
+    const data = JSON.parse(raw) as Record<string, unknown>[];
+    return data.map((l) => ({ status: "New", ...l, origin: "external" }));
   } catch {
     return [];
   }
@@ -35,6 +50,9 @@ export async function POST(req: NextRequest) {
     }
 
     const leads = readLeads();
+    // Category identifies the service/source of the lead for the backend.
+    // Falls back to loanType for older forms that only send loanType.
+    const category = body.category || body.loanType || "General Enquiry";
     const newLead = {
       ...body,
       id: `LEAD-${Date.now()}`,
@@ -43,9 +61,13 @@ export async function POST(req: NextRequest) {
       email: body.email || "",
       business: body.business || "",
       city: body.city || "",
+      category,
+      service: category,
       loan: body.loan || "",
-      loanType: body.loanType || "",
+      loanType: body.loanType || category,
+      details: body.details || "",
       source: body.source || "website",
+      origin: "website",
       status: "New",
       createdAt: new Date().toISOString(),
     };
@@ -61,7 +83,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const leads = readLeads();
+  const leads = [...readExternalLeads(), ...readLeads()];
   return NextResponse.json({ leads, total: leads.length });
 }
 

@@ -1,9 +1,18 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
 const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
+
+const LOAN_ROUTES: [string, string][] = [
+  ["Home Loan", "/loans/home-loan"],
+  ["Personal Loan", "/loans/personal-loan"],
+  ["Business Loan", "/loans/business-loan"],
+  ["Working Capital", "/loans/working-capital"],
+  ["Loan Against Property", "/loans/loan-against-property"],
+];
 
 const FOOTER_CONTACT = {
   address: "305, 3rd Floor, Suneja Tower 1, Janakpuri District Center, Janakpuri West, New Delhi 110078",
@@ -18,12 +27,13 @@ const SERVICES = [
     title: "Loan Assistance",
     tagline: "End-to-end loan support from 50+ lenders",
     desc: "We help individuals and businesses access the right loan — from identifying the best lender to documentation and disbursement. Our network of 50+ banks and NBFCs ensures maximum approval chances.",
-    features: ["Home Loan", "Business Loan", "Personal Loan", "Car Loan", "Loan Against Property"],
+    features: ["Home Loan", "Business Loan", "Personal Loan", "Working Capital", "Loan Against Property"],
     cta: "Apply for Loan",
     ctaHref: "/loans/business-loan",
     color: "#eff6ff",
     border: "#bfdbfe",
     accent: BLUE,
+    loanDropdown: true,
   },
   {
     id: "financial-advisory",
@@ -45,7 +55,7 @@ const SERVICES = [
     tagline: "Boost your CIBIL score for better loan chances",
     desc: "A low credit score can block loan approvals. Our experts analyze your credit report, identify issues, and create a customised action plan to improve your score within 90–180 days.",
     features: ["CIBIL Score Analysis", "Dispute Resolution", "Credit Building Plan", "90-day Improvement Strategy", "Ongoing Monitoring"],
-    cta: "Check Credit Report",
+    cta: "How to improve your CIBIL",
     ctaHref: "/credit-report",
     color: "#f0fdf4",
     border: "#bbf7d0",
@@ -56,10 +66,10 @@ const SERVICES = [
     icon: "📋",
     title: "Documentation Support",
     tagline: "Complete paperwork assistance for faster approvals",
-    desc: "Incomplete or incorrect documentation is the #1 reason for loan rejections. Our team helps you prepare CMA data, ITR, balance sheets, projections, and all bank-specific requirements.",
-    features: ["CMA Data Preparation", "Financial Statement Review", "Business Projection Reports", "Bank-specific Documentation", "Application Filing"],
+    desc: "Incomplete or incorrect documentation is the #1 reason for loan rejections. Our team helps you with GST Registration, LEI Certificate, UDYAM Registration, CMA data, ITR, balance sheets, projections, and all bank-specific requirements.",
+    features: ["GST Registration", "LEI Certificate Generation", "UDYAM Registration", "Loan Documentation Service", "CMA Data & Financial Statements"],
     cta: "Talk to an Advisor",
-    ctaHref: "/contact",
+    ctaHref: "/documentation-support",
     color: "#fdf4ff",
     border: "#e9d5ff",
     accent: "#7c3aed",
@@ -67,6 +77,7 @@ const SERVICES = [
 ];
 
 export default function OurServicesPage() {
+  const router = useRouter();
   return (
     <div style={{ fontFamily: "'Inter', sans-serif", color: "#1a202c", background: "#fff" }}>
       <Navbar />
@@ -130,12 +141,25 @@ export default function OurServicesPage() {
                     {f}
                   </div>
                 ))}
-                <Link
-                  href={svc.ctaHref}
-                  style={{ display: "inline-block", marginTop: 24, background: svc.accent, color: "#fff", padding: "12px 28px", borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none" }}
-                >
-                  {svc.cta} →
-                </Link>
+                {"loanDropdown" in svc && svc.loanDropdown ? (
+                  <select
+                    defaultValue=""
+                    onChange={(e) => { if (e.target.value) router.push(e.target.value); }}
+                    style={{ marginTop: 24, background: svc.accent, color: "#fff", padding: "12px 24px", borderRadius: 10, fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", appearance: "none", WebkitAppearance: "none", maxWidth: 260 }}
+                  >
+                    <option value="" disabled>{svc.cta} ▾</option>
+                    {LOAN_ROUTES.map(([label, href]) => (
+                      <option key={href} value={href} style={{ background: "#fff", color: "#1a202c" }}>{label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Link
+                    href={svc.ctaHref}
+                    style={{ display: "inline-block", marginTop: 24, background: svc.accent, color: "#fff", padding: "12px 28px", borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none" }}
+                  >
+                    {svc.cta} →
+                  </Link>
+                )}
               </div>
             </div>
           ))}

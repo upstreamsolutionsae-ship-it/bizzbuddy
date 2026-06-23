@@ -7,20 +7,39 @@ const NAVY = "#0f2d5e";
 const BLUE = "#1565C0";
 const GOLD = "#b45309";
 
-// Indicative gold price data — in production this would come from a live API
-const BASE_24K_PER_10G = 73000; // ₹ per 10g (approximate for reference)
+// Fallback values — used until live data loads from /api/market.
+const BASE_24K_PER_10G = 73000; // ₹ per 10g
+const FALLBACK_NIFTY = 24100;
+const FALLBACK_SENSEX = 79300;
 
 export default function GoldPricePage() {
   const [price24k, setPrice24k] = useState(BASE_24K_PER_10G);
+  const [nifty, setNifty] = useState(FALLBACK_NIFTY);
+  const [sensex, setSensex] = useState(FALLBACK_SENSEX);
   const [grams, setGrams] = useState(10);
   const [purity, setPurity] = useState("24");
   const [lastUpdated, setLastUpdated] = useState("");
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
-    // Simulate a slight daily variance
-    const variance = Math.floor(Math.random() * 400) - 200;
-    setPrice24k(BASE_24K_PER_10G + variance);
-    setLastUpdated(new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }));
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/market");
+        const data = await res.json();
+        if (!active) return;
+        if (data?.gold?.per10g24k) setPrice24k(data.gold.per10g24k);
+        if (data?.nifty?.value) setNifty(data.nifty.value);
+        if (data?.sensex?.value) setSensex(data.sensex.value);
+        setLive(Boolean(data?.gold?.live || data?.nifty?.live || data?.sensex?.live));
+        setLastUpdated(
+          new Date(data?.updatedAt || Date.now()).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+        );
+      } catch {
+        if (active) setLastUpdated(new Date().toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }));
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const purityMultiplier: Record<string, number> = { "24": 1, "22": 22 / 24, "18": 18 / 24, "14": 14 / 24 };
@@ -46,34 +65,35 @@ export default function GoldPricePage() {
           <span style={{ margin: "0 8px" }}>›</span>
           <span>Tools</span>
           <span style={{ margin: "0 8px" }}>›</span>
-          <span style={{ color: "#374151", fontWeight: 600 }}>Today's Gold Price</span>
+          <span style={{ color: "#374151", fontWeight: 600 }}>Today's Indices</span>
         </div>
       </div>
 
-      <section style={{ background: `linear-gradient(135deg, ${GOLD}, #d97706)`, padding: "56px 5%", textAlign: "center" }}>
-        <h1 style={{ fontSize: 40, fontWeight: 900, color: "#fff", marginBottom: 12 }}>Today's Gold Price</h1>
+      <section style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, padding: "56px 5%", textAlign: "center" }}>
+        <h1 style={{ fontSize: 40, fontWeight: 900, color: "#fff", marginBottom: 12 }}>Today&apos;s Indices</h1>
         <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 16 }}>
-          Indicative gold rates in India • {lastUpdated}
+          {live ? "🟢 Live" : "Indicative"} Gold, NIFTY &amp; SENSEX rates{lastUpdated ? ` • ${lastUpdated}` : ""}
         </p>
       </section>
 
       <section style={{ padding: "64px 5%", background: "#fef9ee" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          {/* Highlight card */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 24, marginBottom: 40 }}>
+          {/* Index highlight cards: Gold, NIFTY, SENSEX */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24, marginBottom: 40 }}>
             {[
-              { label: "24K Gold (per 10g)", value: fmt(price24k), change: "+₹180", up: true },
-              { label: "22K Gold (per 10g)", value: fmt(Math.round(price24k * 22 / 24)), change: "+₹165", up: true },
+              { label: "Gold 24K (per 10g)", value: fmt(price24k), accent: GOLD, border: "#fde68a", sub: live ? "Live spot price" : "Indicative" },
+              { label: "NIFTY 50", value: nifty.toLocaleString("en-IN", { maximumFractionDigits: 2 }), accent: "#15803d", border: "#bbf7d0", sub: live ? "NSE • Live" : "Indicative" },
+              { label: "SENSEX", value: sensex.toLocaleString("en-IN", { maximumFractionDigits: 2 }), accent: BLUE, border: "#bfdbfe", sub: live ? "BSE • Live" : "Indicative" },
             ].map((card) => (
-              <div key={card.label} style={{ background: "#fff", borderRadius: 20, padding: 32, border: "1.5px solid #fde68a", textAlign: "center", boxShadow: "0 4px 16px rgba(180,83,9,0.08)" }}>
-                <div style={{ fontSize: 14, color: "#92400e", fontWeight: 700, marginBottom: 8 }}>{card.label}</div>
-                <div style={{ fontSize: 36, fontWeight: 900, color: GOLD }}>{card.value}</div>
-                <div style={{ fontSize: 13, color: card.up ? "#15803d" : "#dc2626", marginTop: 8, fontWeight: 600 }}>
-                  {card.up ? "▲" : "▼"} {card.change} today
-                </div>
+              <div key={card.label} style={{ background: "#fff", borderRadius: 20, padding: 32, border: `1.5px solid ${card.border}`, textAlign: "center", boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
+                <div style={{ fontSize: 14, color: "#475569", fontWeight: 700, marginBottom: 8 }}>{card.label}</div>
+                <div style={{ fontSize: 34, fontWeight: 900, color: card.accent }}>{card.value}</div>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 8, fontWeight: 600 }}>{card.sub}</div>
               </div>
             ))}
           </div>
+
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: NAVY, marginBottom: 16 }}>Gold Rates Detail</h2>
 
           {/* Full rate table */}
           <div style={{ background: "#fff", borderRadius: 20, border: "1.5px solid #fde68a", overflow: "hidden", marginBottom: 36 }}>

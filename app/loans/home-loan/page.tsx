@@ -13,7 +13,7 @@ const config: LoanConfig = {
     { value: "Best-in-class*", label: "Interest Rates" },
     { value: "30 Yrs", label: "Max Tenure" },
     { value: "Any Amount", label: "Loan Value" },
-    { value: "24–48 Hrs", label: "Fast Approval" },
+    { value: "As fast as 24-48 hrs", label: "Approval*" },
   ],
   features: [
     { icon: "💰", title: "Competitive Interest Rates", desc: "Access home loan at lowest interest rates with best deals from 50+ lenders including leading PSU banks, private banks, and HFCs." },

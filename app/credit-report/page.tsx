@@ -30,15 +30,19 @@ const TIPS = [
 ];
 
 export default function CreditReportPage() {
-  const [form, setForm] = useState({ name: "", phone: "", pan: "" });
+  const [form, setForm] = useState({ name: "", phone: "", cibil: "" });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (form.phone.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
     await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, loanType: "Credit Report Request", source: "credit-report-page" }),
+      body: JSON.stringify({ ...form, category: "Credit Advisory", loanType: "Credit Advisory", source: "credit-advisory-page" }),
     });
     setSubmitted(true);
   };
@@ -59,13 +63,13 @@ export default function CreditReportPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 56, alignItems: "center" }}>
           <div>
             <div style={{ display: "inline-block", background: "rgba(255,255,255,0.12)", color: "#fff", padding: "5px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700, marginBottom: 20, border: "1px solid rgba(255,255,255,0.2)", letterSpacing: 1 }}>
-              FREE CREDIT HEALTH CHECK
+              FREE CREDIT ADVISORY
             </div>
             <h1 style={{ fontSize: 42, fontWeight: 900, color: "#fff", lineHeight: 1.2, marginBottom: 16 }}>
-              Know Your Credit Score
+              Improve Your Credit Score
             </h1>
             <p style={{ fontSize: 16, color: "rgba(255,255,255,0.75)", lineHeight: 1.8, marginBottom: 32 }}>
-              Your CIBIL/credit score determines your loan eligibility and interest rate. Check your credit health for free and get expert advice on improving it.
+              Our experts can guide you on what changes you can easily implement to improve your CIBIL score.
             </p>
             <div style={{ display: "flex", gap: 32 }}>
               {[["Free", "Report Request"], ["Expert", "Score Analysis"], ["90 Days", "Improvement Plan"]].map(([val, label]) => (
@@ -83,18 +87,21 @@ export default function CreditReportPage() {
               <div style={{ textAlign: "center", padding: "40px 0" }}>
                 <div style={{ width: 64, height: 64, background: "#dcfce7", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 16px" }}>✅</div>
                 <h3 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 8 }}>Request Received!</h3>
-                <p style={{ color: "#64748b", fontSize: 14 }}>Our credit expert will contact you within 24 hours with your free credit health report and improvement recommendations.</p>
+                <p style={{ color: "#64748b", fontSize: 14 }}>Our expert partner will call you within 6 working hours.</p>
               </div>
             ) : (
               <>
-                <h3 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Get Free Credit Report</h3>
-                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>Our expert will analyse and share insights within 24 hours</p>
+                <h3 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>FREE Credit Advisory</h3>
+                <p style={{ fontSize: 13, color: "#64748b", marginBottom: 20 }}>Share your details and our expert will guide you on improving your CIBIL</p>
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <input placeholder="Your Full Name *" required value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
-                  <input type="tel" placeholder="Mobile Number *" required value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
-                  <input placeholder="PAN Number (optional, for accurate report)" value={form.pan} onChange={(e) => setForm((p) => ({ ...p, pan: e.target.value.toUpperCase() }))} maxLength={10} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
+                  <input type="tel" inputMode="numeric" maxLength={10} placeholder="Mobile Number *" required value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", outline: "none" }} />
+                  <select value={form.cibil} onChange={(e) => setForm((p) => ({ ...p, cibil: e.target.value }))} style={{ padding: "11px 14px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, fontFamily: "'Inter', sans-serif", color: form.cibil ? "#1a202c" : "#9ca3af" }}>
+                    <option value="">Existing CIBIL Score (approx)</option>
+                    {["750+ (Excellent)", "700–749 (Good)", "650–699 (Average)", "600–649 (Poor)", "Below 600 (Very Poor)", "Don't know"].map((o) => (<option key={o}>{o}</option>))}
+                  </select>
                   <button type="submit" style={{ background: `linear-gradient(135deg, ${NAVY}, ${BLUE})`, color: "#fff", padding: "13px", borderRadius: 10, fontWeight: 700, fontSize: 15, border: "none", cursor: "pointer", fontFamily: "'Inter', sans-serif", marginTop: 4 }}>
-                    Get Free Credit Report →
+                    Get Free Credit Advisory →
                   </button>
                 </form>
                 <p style={{ fontSize: 11, color: "#94a3b8", textAlign: "center", marginTop: 10 }}>🔒 Your data is secure. No hard inquiry on your credit.</p>

@@ -16,7 +16,7 @@ const TOOLS = [
   { icon: "🧮", title: "EMI Calculator", desc: "Calculate your exact monthly EMI for any loan amount, rate, and tenure.", href: "/tools/emi-calculator", color: "#f0fdf4", border: "#bbf7d0", accent: "#15803d" },
   { icon: "💱", title: "Currency Converter", desc: "Convert between 15+ currencies with live indicative exchange rates.", href: "/tools/currency-converter", color: "#fdf4ff", border: "#e9d5ff", accent: "#7c3aed" },
   { icon: "🏦", title: "IFSC Locator", desc: "Find any bank branch details by entering the IFSC code.", href: "/tools/ifsc-locator", color: "#fff7ed", border: "#fed7aa", accent: "#c2410c" },
-  { icon: "🥇", title: "Today's Gold Price", desc: "Check today's gold rates in India — 24K, 22K, 18K with value calculator.", href: "/tools/gold-price", color: "#fefce8", border: "#fde68a", accent: "#b45309" },
+  { icon: "📈", title: "Today's Indices", desc: "Live Gold, NIFTY 50 and SENSEX rates, plus a gold value calculator.", href: "/tools/gold-price", color: "#fefce8", border: "#fde68a", accent: "#b45309" },
 ];
 
 export default function ToolsPage() {
