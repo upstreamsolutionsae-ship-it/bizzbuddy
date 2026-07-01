@@ -2,10 +2,46 @@ import type { Metadata } from "next";
 import "./globals.css";
 import NextAuthProvider from "@/components/SessionProvider";
 
+// Resolve the live site URL so shared links (WhatsApp, LinkedIn, etc.) load the logo
+// preview from an absolute URL. Override anytime by setting NEXT_PUBLIC_SITE_URL.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "https://bizzbuddy.vercel.app");
+
+const title = "BizzBuddy | Your Growth Partner for MSMEs – Built by Bankers";
+const description =
+  "BizzBuddy by SDM Fintech – Debt, Equity, Advisory & Analytics for MSMEs. Apply for business loans, get financial health check, connect with investors.";
+
 export const metadata: Metadata = {
-  title: "BizzBuddy | Your Growth Partner for MSMEs – Built by Bankers",
-  description: "BizzBuddy by SDM Fintech – Debt, Equity, Advisory & Analytics for MSMEs. Apply for business loans, get financial health check, connect with investors.",
-  keywords: "MSME loan, business loan, SME finance, equity funding, financial advisory, DSA partner, working capital",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  keywords:
+    "MSME loan, business loan, SME finance, equity funding, financial advisory, DSA partner, working capital",
+  icons: { icon: "/bizzbuddy-logo.png", apple: "/bizzbuddy-logo.png" },
+  openGraph: {
+    type: "website",
+    siteName: "BizzBuddy",
+    url: siteUrl,
+    title,
+    description,
+    images: [
+      {
+        url: "/bizzbuddy-logo.png",
+        width: 282,
+        height: 235,
+        alt: "BizzBuddy — Growth Partner for MSMEs",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description,
+    images: ["/bizzbuddy-logo.png"],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
