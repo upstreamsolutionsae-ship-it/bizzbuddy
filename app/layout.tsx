@@ -20,7 +20,6 @@ export const metadata: Metadata = {
   description,
   keywords:
     "MSME loan, business loan, SME finance, equity funding, financial advisory, DSA partner, working capital",
-  icons: { icon: "/bizzbuddy-logo.png", apple: "/bizzbuddy-logo.png" },
   openGraph: {
     type: "website",
     siteName: "BizzBuddy",
