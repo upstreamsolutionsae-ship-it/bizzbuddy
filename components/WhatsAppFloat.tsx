@@ -24,7 +24,7 @@ export default function WhatsAppFloat() {
       aria-label="Chat with us on WhatsApp"
       style={{
         position: "fixed",
-        top: 84,
+        bottom: 22,
         right: 18,
         zIndex: 1000,
         display: "flex",
