@@ -31,8 +31,8 @@ const STEPS = [
 const PARTNER_TYPES = [
   { icon: "🤝", title: "DSA / Loan Agent", desc: "Refer loan clients and earn commission on every successful disbursement." },
   { icon: "🏢", title: "CA / Tax Consultant", desc: "Offer complete financial solutions to your clients — loans, investments, and advisory." },
-  { icon: "🏦", title: "Bank / NBFC Rejects", desc: "Refer clients who were rejected elsewhere. We find alternative lenders for them." },
-  { icon: "👔", title: "Real Estate Agent", desc: "Help your property buyers get the best home loan deals through BizzBuddy." },
+  { icon: "👔", title: "Working Professionals", desc: "Know someone who is looking for a loan or his applicant got rejected from a Bank/NBFC? We will match him with the right lender and you can earn on referral!" },
+  { icon: "🏠", title: "Real Estate Agent", desc: "Help your property buyers get the best home loan deals through BizzBuddy." },
 ];
 
 export default function BecomePartnerPage() {
@@ -41,10 +41,10 @@ export default function BecomePartnerPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await fetch("/api/leads", {
+    await fetch("/api/partners", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, category: "Partner Registration", loanType: `Partner: ${form.partnerType}`, source: "partner-page" }),
+      body: JSON.stringify({ ...form, source: "partner-page" }),
     });
     setSubmitted(true);
   };

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import NextAuthProvider from "@/components/SessionProvider";
+import WhatsAppFloat from "@/components/WhatsAppFloat";
 
 // Resolve the live site URL so shared links (WhatsApp, LinkedIn, etc.) load the logo
 // preview from an absolute URL. Override anytime by setting NEXT_PUBLIC_SITE_URL.
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body style={{ fontFamily: "'Inter', sans-serif", background: "#fff" }}>
         <NextAuthProvider>
           {children}
+          <WhatsAppFloat />
         </NextAuthProvider>
       </body>
     </html>
